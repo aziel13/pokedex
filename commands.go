@@ -82,3 +82,16 @@ func commandExplore(w io.Writer, cfg *configuration, location_name string) error
 
 	return nil
 }
+
+func commandCapture(w io.Writer, cfg *configuration, pokemon_name string) error {
+
+	RespPokemon, err := cfg.pokeapiClient.Get_Pokemon_Data(pokemon_name)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintln(w, "Throwing a Pokeball at "+RespPokemon.Name+"...")
+
+	return nil
+}

@@ -230,3 +230,49 @@ func TestExploreNoLocationCommand(t *testing.T) {
 	}
 
 }
+
+func TestCaptureCommand(t *testing.T) {
+	var buffer bytes.Buffer
+	pokeClient := pokeapi.NewClient(5 * time.Second)
+	cfg := &configuration{
+		pokeapiClient: pokeClient,
+	}
+
+	exploreAreaString := `pikachu`
+	expectedMessage := "Throwing a Pokeball at pikachu...\npikachu escaped!"
+	expectedMessage2 := "Throwing a Pokeball at pikachu...\npikachu was caught!"
+
+	err := commandCapture(&buffer, cfg, exploreAreaString)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	actual := buffer.String()
+
+	if !(actual == expectedMessage || actual == expectedMessage2) {
+		t.Errorf("actual does not match expected\nactual: %v\nexpected: %v or %v", actual, expectedMessage, expectedMessage2)
+	}
+
+}
+
+/*
+func TestCaptureNoInputCommand(t *testing.T) {
+	var buffer bytes.Buffer
+	pokeClient := pokeapi.NewClient(5 * time.Second)
+	cfg := &configuration{
+		pokeapiClient: pokeClient,
+	}
+
+	exploreAreaString := ``
+	expectedMessage := "A pokemon name value is required. for example 'capture pikachu'"
+
+	err := commandCapture(&buffer, cfg, exploreAreaString)
+
+	actual := err.Error()
+
+	if actual != expectedMessage {
+		t.Errorf("actual does not match expected\nactual: %v\nexpected: %v", actual, expectedMessage)
+	}
+
+}*/
