@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand/v2"
 )
 
 func commandHelp(w io.Writer, cfg *configuration, input string) error {
@@ -90,8 +91,26 @@ func commandCapture(w io.Writer, cfg *configuration, pokemon_name string) error 
 	if err != nil {
 		return err
 	}
-
+	RespPokemon_Species, err2 := cfg.pokeapiClient.Get_Pokemon_Species_Data(pokemon_name)
+	if err2 != nil {
+		return err
+	}
 	fmt.Fprintln(w, "Throwing a Pokeball at "+RespPokemon.Name+"...")
+
+	captureRate := RespPokemon_Species.Capture_rate
+	baseXp := RespPokemon.Base_Experience
+	percentCaptureRate := captureRate / 100
+
+	odds := percentCaptureRate * baseXp
+
+	randomNumber := rand.IntN(baseXp)
+
+	if randomNumber > odds {
+		fmt.Fprintln(w, RespPokemon.Name+" was caught!")
+
+	} else {
+		fmt.Fprintln(w, RespPokemon.Name+" escaped!")
+	}
 
 	return nil
 }
