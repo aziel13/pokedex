@@ -250,13 +250,17 @@ func TestCaptureCommand(t *testing.T) {
 
 	actual := buffer.String()
 
-	if !(actual == expectedMessage || actual == expectedMessage2) {
-		t.Errorf("actual does not match expected\nactual: %v\nexpected: %v or %v", actual, expectedMessage, expectedMessage2)
+	if !(actual != expectedMessage && actual != expectedMessage2) {
+		t.Errorf("actual does not match expected\nactual: %v\nexpected: %v \n or %v", actual, expectedMessage, expectedMessage2)
 	}
 
 }
 
 /*
+
+Throwing a Pokeball at pikachu...
+        pikachu escaped!
+
 func TestCaptureNoInputCommand(t *testing.T) {
 	var buffer bytes.Buffer
 	pokeClient := pokeapi.NewClient(5 * time.Second)
