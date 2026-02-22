@@ -1,26 +1,32 @@
 package main
 
 import (
-	"fmt"
-	"strings"
+	"os"
+	"pokedexcli/internal/pokeapi"
+	"time"
 )
 
 func main() {
-	fmt.Println("Hello, World!")
-}
 
-func cleanInput(text string) []string {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+	//done := make(chan bool)
 
-	cleaned := []string{}
+	interval := 5 * time.Second
 
-	split_list := strings.Split(text, " ")
+	pokeClient := pokeapi.NewClient(interval)
 
-	for _, v := range split_list {
-		if strings.TrimSpace(v) != "" {
-			cleaned = append(cleaned, strings.ToLower(strings.TrimSpace(v)))
-		}
-
+	cfg := &configuration{
+		pokeapiClient: pokeClient,
 	}
 
-	return cleaned
+	code := startRepl(os.Stdout, cfg)
+	if code == 1 {
+
+		os.Exit(0)
+
+	}
 }
+
+// "https://pokeapi.co/api/v2/{endpoint}/" location areas
+// https://pokeapi.co/api/v2/location-area/{id or name}/
