@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"io"
 	"math/rand/v2"
+	"strconv"
 )
 
-func commandHelp(w io.Writer, cfg *configuration, input string) error {
+func commandHelp(w io.Writer, cfg *configuration, input string, pokedex pokedex) error {
 
 	fmt.Fprintln(w, "Welcome to the Pokedex!\nUsage:")
 	for _, cmd := range getCommands() {
@@ -20,7 +21,7 @@ func commandHelp(w io.Writer, cfg *configuration, input string) error {
 	return nil
 }
 
-func commandMapForward(w io.Writer, cfg *configuration, input string) error {
+func commandMapForward(w io.Writer, cfg *configuration, input string, pokedex pokedex) error {
 
 	locationsResp, err := cfg.pokeapiClient.ListLocations(cfg.Next)
 
@@ -39,7 +40,7 @@ func commandMapForward(w io.Writer, cfg *configuration, input string) error {
 	return nil
 }
 
-func commandMapBack(w io.Writer, cfg *configuration, input string) error {
+func commandMapBack(w io.Writer, cfg *configuration, input string, pokedex pokedex) error {
 
 	if cfg.Previous == nil {
 		return errors.New("you're on the first page")
@@ -60,14 +61,14 @@ func commandMapBack(w io.Writer, cfg *configuration, input string) error {
 	return nil
 }
 
-func commandExit(w io.Writer, cfg *configuration, input string) error {
+func commandExit(w io.Writer, cfg *configuration, input string, pokedex pokedex) error {
 	fmt.Fprintln(w, "Closing the Pokedex... Goodbye!")
 	//os.Exit(0)
 
 	return errors.New("ExitCode1")
 }
 
-func commandExplore(w io.Writer, cfg *configuration, location_name string) error {
+func commandExplore(w io.Writer, cfg *configuration, location_name string, pokedex pokedex) error {
 
 	pokemonEncountersResp, err := cfg.pokeapiClient.ExploreLocation(location_name)
 
@@ -79,12 +80,15 @@ func commandExplore(w io.Writer, cfg *configuration, location_name string) error
 	fmt.Fprintln(w, "Found Pokemon:")
 	for _, pokemon := range pokemonEncountersResp.Pokemon_encounters {
 		fmt.Fprintln(w, " - "+pokemon.Pokemon.NAME)
+
+		pokedex.KnownPokemon[pokemon.Pokemon.NAME] = true
+
 	}
 
 	return nil
 }
 
-func commandCapture(w io.Writer, cfg *configuration, pokemon_name string) error {
+func commandCapture(w io.Writer, cfg *configuration, pokemon_name string, pokedex pokedex) error {
 
 	RespPokemon, err := cfg.pokeapiClient.Get_Pokemon_Data(pokemon_name)
 
@@ -101,15 +105,46 @@ func commandCapture(w io.Writer, cfg *configuration, pokemon_name string) error 
 	baseXp := RespPokemon.Base_Experience
 	percentCaptureRate := captureRate / 100
 
-	odds := percentCaptureRate * baseXp
-
 	randomNumber := rand.IntN(baseXp)
 
-	if randomNumber > odds {
+	if randomNumber > (percentCaptureRate / 2) {
 		fmt.Fprintln(w, RespPokemon.Name+" was caught!")
-
+		pokedex.capturedPokemon[RespPokemon.Name] += 1
 	} else {
 		fmt.Fprintln(w, RespPokemon.Name+" escaped!")
+	}
+
+	return nil
+}
+
+func commandInspect(w io.Writer, cfg *configuration, pokemon_name string, pokedex pokedex) error {
+
+	_, ok := pokedex.capturedPokemon[pokemon_name]
+
+	if !ok {
+		return errors.New("you have not caught that pokemon")
+	}
+
+	RespPokemon, err := cfg.pokeapiClient.Get_Pokemon_Data(pokemon_name)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintln(w, "Name: "+RespPokemon.Name)
+	fmt.Fprintln(w, "Height: "+strconv.Itoa(RespPokemon.Height))
+	fmt.Fprintln(w, "Weight: "+strconv.Itoa(RespPokemon.Weight))
+	fmt.Fprintln(w, "Stats:")
+
+	for _, stat := range RespPokemon.Stats {
+
+		fmt.Fprintln(w, "  -"+stat.Stat.Name+": "+strconv.Itoa(stat.Base_stat))
+
+	}
+	fmt.Fprintln(w, "Types:")
+
+	for _, typ := range RespPokemon.Types {
+		fmt.Fprintln(w, "  - "+typ.Atype.Name)
 	}
 
 	return nil

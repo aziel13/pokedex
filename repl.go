@@ -19,10 +19,18 @@ type configuration struct {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(io.Writer, *configuration, string) error
+	callback    func(io.Writer, *configuration, string, pokedex) error
 }
 
-func startRepl(w io.Writer, cfg *configuration) int {
+type pokedex struct {
+	KnownPokemon    map[string]bool
+	capturedPokemon map[string]int
+}
+
+func startRepl(w io.Writer, cfg *configuration, pokedex pokedex) int {
+
+	pokedex.capturedPokemon = make(map[string]int)
+	pokedex.KnownPokemon = make(map[string]bool)
 
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -46,7 +54,7 @@ func startRepl(w io.Writer, cfg *configuration) int {
 
 		command, exists := getCommands()[commandName]
 		if exists {
-			err := command.callback(w, cfg, inputString)
+			err := command.callback(w, cfg, inputString, pokedex)
 			if err != nil {
 
 				errText := err.Error()
@@ -118,6 +126,16 @@ func getCommands() map[string]cliCommand {
 			name:        "explore",
 			description: "explore a world location. explore <location>",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch",
+			description: "attempt to catch a pokemon",
+			callback:    commandCapture,
+		},
+		"inspect": {
+			name:        "inspect",
+			description: "inspect a captured pokemon",
+			callback:    commandInspect,
 		},
 	}
 }

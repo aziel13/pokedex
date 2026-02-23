@@ -11,7 +11,7 @@ import (
 func (c *Client) Get_Pokemon_Data(pokemonName string) (RespPokemon, error) {
 
 	if pokemonName == "" {
-		return RespPokemon{}, errors.New("A location value is required. for example 'explore pastoria-city-area'")
+		return RespPokemon{}, errors.New("A Pokemon Name value is required.'")
 	}
 
 	url := baseURL + `/pokemon/` + pokemonName

@@ -20,7 +20,9 @@ func main() {
 		pokeapiClient: pokeClient,
 	}
 
-	code := startRepl(os.Stdout, cfg)
+	pokedex := pokedex{}
+
+	code := startRepl(os.Stdout, cfg, pokedex)
 	if code == 1 {
 
 		os.Exit(0)
