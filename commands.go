@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func commandHelp(w io.Writer, cfg *configuration, input string, pokedex pokedex) error {
+func commandHelp(w io.Writer, cfg *configuration, input string, pokedex *pokedex) error {
 
 	fmt.Fprintln(w, "Welcome to the Pokedex!\nUsage:")
 	for _, cmd := range getCommands() {
@@ -21,7 +21,7 @@ func commandHelp(w io.Writer, cfg *configuration, input string, pokedex pokedex)
 	return nil
 }
 
-func commandMapForward(w io.Writer, cfg *configuration, input string, pokedex pokedex) error {
+func commandMapForward(w io.Writer, cfg *configuration, input string, pokedex *pokedex) error {
 
 	locationsResp, err := cfg.pokeapiClient.ListLocations(cfg.Next)
 
@@ -40,7 +40,7 @@ func commandMapForward(w io.Writer, cfg *configuration, input string, pokedex po
 	return nil
 }
 
-func commandMapBack(w io.Writer, cfg *configuration, input string, pokedex pokedex) error {
+func commandMapBack(w io.Writer, cfg *configuration, input string, pokedex *pokedex) error {
 
 	if cfg.Previous == nil {
 		return errors.New("you're on the first page")
@@ -61,14 +61,14 @@ func commandMapBack(w io.Writer, cfg *configuration, input string, pokedex poked
 	return nil
 }
 
-func commandExit(w io.Writer, cfg *configuration, input string, pokedex pokedex) error {
+func commandExit(w io.Writer, cfg *configuration, input string, pokedex *pokedex) error {
 	fmt.Fprintln(w, "Closing the Pokedex... Goodbye!")
 	//os.Exit(0)
 
 	return errors.New("ExitCode1")
 }
 
-func commandExplore(w io.Writer, cfg *configuration, location_name string, pokedex pokedex) error {
+func commandExplore(w io.Writer, cfg *configuration, location_name string, pokedex *pokedex) error {
 
 	pokemonEncountersResp, err := cfg.pokeapiClient.ExploreLocation(location_name)
 
@@ -88,7 +88,7 @@ func commandExplore(w io.Writer, cfg *configuration, location_name string, poked
 	return nil
 }
 
-func commandCapture(w io.Writer, cfg *configuration, pokemon_name string, pokedex pokedex) error {
+func commandCapture(w io.Writer, cfg *configuration, pokemon_name string, pokedex *pokedex) error {
 
 	RespPokemon, err := cfg.pokeapiClient.Get_Pokemon_Data(pokemon_name)
 
@@ -110,6 +110,8 @@ func commandCapture(w io.Writer, cfg *configuration, pokemon_name string, pokede
 	if randomNumber > (percentCaptureRate / 2) {
 		fmt.Fprintln(w, RespPokemon.Name+" was caught!")
 		pokedex.capturedPokemon[RespPokemon.Name] += 1
+		pokedex.capturedPokemonByTime = append(pokedex.capturedPokemonByTime, RespPokemon.Name)
+
 	} else {
 		fmt.Fprintln(w, RespPokemon.Name+" escaped!")
 	}
@@ -117,7 +119,7 @@ func commandCapture(w io.Writer, cfg *configuration, pokemon_name string, pokede
 	return nil
 }
 
-func commandInspect(w io.Writer, cfg *configuration, pokemon_name string, pokedex pokedex) error {
+func commandInspect(w io.Writer, cfg *configuration, pokemon_name string, pokedex *pokedex) error {
 
 	_, ok := pokedex.capturedPokemon[pokemon_name]
 
@@ -148,4 +150,22 @@ func commandInspect(w io.Writer, cfg *configuration, pokemon_name string, pokede
 	}
 
 	return nil
+}
+func commandPokedex(w io.Writer, cfg *configuration, pokemon_name string, pokedex *pokedex) error {
+
+	fmt.Fprintln(w, "Your Pokedex:")
+	if len(pokedex.capturedPokemon) == 0 {
+
+		return errors.New("you have not caught any pokemon")
+
+	} else {
+
+		for index := range pokedex.capturedPokemonByTime {
+			fmt.Fprintln(w, " - "+pokedex.capturedPokemonByTime[index])
+		}
+
+	}
+
+	return nil
+
 }

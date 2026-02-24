@@ -10,18 +10,21 @@ import (
 )
 
 func TestExit(t *testing.T) {
-	pokedex := pokedex{}
-	pokedex.capturedPokemon = make(map[string]int)
-	pokedex.KnownPokemon = make(map[string]bool)
+
 	var buffer bytes.Buffer
 	pokeClient := pokeapi.NewClient(5 * time.Second)
 	cfg := &configuration{
 		pokeapiClient: pokeClient,
 	}
 
+	thisPokedex := &pokedex{}
+
+	thisPokedex.capturedPokemon = make(map[string]int)
+	thisPokedex.KnownPokemon = make(map[string]bool)
+
 	expectedReturn := errors.New("ExitCode1")
 
-	errorActual := commandExit(&buffer, cfg, "", pokedex)
+	errorActual := commandExit(&buffer, cfg, "", thisPokedex)
 
 	if errorActual.Error() != expectedReturn.Error() {
 		t.Errorf("actual does not match expected\nactual: %v\nexpected: %v", errorActual.Error(), expectedReturn.Error())
@@ -30,7 +33,7 @@ func TestExit(t *testing.T) {
 }
 
 func TestExitMessage(t *testing.T) {
-	pokedex := pokedex{}
+	pokedex := &pokedex{}
 	pokedex.capturedPokemon = make(map[string]int)
 	pokedex.KnownPokemon = make(map[string]bool)
 	var buffer bytes.Buffer
@@ -55,7 +58,7 @@ func TestHelp(t *testing.T) {
 
 	// Without reproducing exactly what the help command does its difficult to test.
 	// best I can think to do is test that its longer than the base welcome message.
-	pokedex := pokedex{}
+	pokedex := &pokedex{}
 	pokedex.capturedPokemon = make(map[string]int)
 	pokedex.KnownPokemon = make(map[string]bool)
 	var buffer bytes.Buffer
@@ -107,7 +110,7 @@ func TestMap(t *testing.T) {
 		"mt-coronet-6f",
 		"mt-coronet-1f-from-exterior",
 	}
-	pokedex := pokedex{}
+	pokedex := &pokedex{}
 	pokedex.capturedPokemon = make(map[string]int)
 	pokedex.KnownPokemon = make(map[string]bool)
 	commandMapForward(&buffer, cfg, "", pokedex)
@@ -153,7 +156,7 @@ func TestMap(t *testing.T) {
 func TestMapBackOnFirstPage(t *testing.T) {
 
 	// this should cause the your on you're on the first page error
-	pokedex := pokedex{}
+	pokedex := &pokedex{}
 	pokedex.capturedPokemon = make(map[string]int)
 	pokedex.KnownPokemon = make(map[string]bool)
 	var buffer bytes.Buffer
@@ -180,7 +183,7 @@ func TestMapBackAfterFirstPage(t *testing.T) {
 	cfg := &configuration{
 		pokeapiClient: pokeClient,
 	}
-	pokedex := pokedex{}
+	pokedex := &pokedex{}
 	pokedex.capturedPokemon = make(map[string]int)
 	pokedex.KnownPokemon = make(map[string]bool)
 	commandMapForward(&buffer, cfg, "", pokedex)
@@ -207,7 +210,7 @@ func TestExploreCommand(t *testing.T) {
 	cfg := &configuration{
 		pokeapiClient: pokeClient,
 	}
-	pokedex := pokedex{}
+	pokedex := &pokedex{}
 	pokedex.capturedPokemon = make(map[string]int)
 	pokedex.KnownPokemon = make(map[string]bool)
 
@@ -232,7 +235,7 @@ func TestExploreNoLocationCommand(t *testing.T) {
 	cfg := &configuration{
 		pokeapiClient: pokeClient,
 	}
-	pokedex := pokedex{}
+	pokedex := &pokedex{}
 	pokedex.capturedPokemon = make(map[string]int)
 	pokedex.KnownPokemon = make(map[string]bool)
 	exploreAreaString := ``
@@ -254,7 +257,7 @@ func TestCaptureCommand(t *testing.T) {
 	cfg := &configuration{
 		pokeapiClient: pokeClient,
 	}
-	pokedex := pokedex{}
+	pokedex := &pokedex{}
 	pokedex.capturedPokemon = make(map[string]int)
 	pokedex.KnownPokemon = make(map[string]bool)
 	exploreAreaString := `pikachu`
@@ -281,7 +284,7 @@ func TestInspectCommand(t *testing.T) {
 	cfg := &configuration{
 		pokeapiClient: pokeClient,
 	}
-	pokedex := pokedex{}
+	pokedex := &pokedex{}
 	pokedex.capturedPokemon = make(map[string]int)
 	pokedex.KnownPokemon = make(map[string]bool)
 
@@ -312,7 +315,7 @@ func TestInspectCapturedPokemonCommand(t *testing.T) {
 	cfg := &configuration{
 		pokeapiClient: pokeClient,
 	}
-	pokedex := pokedex{}
+	pokedex := &pokedex{}
 	pokedex.capturedPokemon = make(map[string]int)
 	pokedex.KnownPokemon = make(map[string]bool)
 
@@ -338,27 +341,63 @@ func TestInspectCapturedPokemonCommand(t *testing.T) {
 
 }
 
-/*
+func TestPokedexCommand(t *testing.T) {
 
-Throwing a Pokeball at pikachu...
-        pikachu escaped!
-
-func TestCaptureNoInputCommand(t *testing.T) {
 	var buffer bytes.Buffer
+	pokedex := &pokedex{}
+	pokedex.capturedPokemon = make(map[string]int)
+	pokedex.KnownPokemon = make(map[string]bool)
+	pokedex.capturedPokemon[`pidgey`] = 1
+	pokedex.capturedPokemon[`caterpie`] = 1
+	pokedex.capturedPokemonByTime = append(pokedex.capturedPokemonByTime, `pidgey`)
+	pokedex.capturedPokemonByTime = append(pokedex.capturedPokemonByTime, `caterpie`)
+	expectedMessage := "Your Pokedex:\n - pidgey\n - caterpie\n"
+
 	pokeClient := pokeapi.NewClient(5 * time.Second)
 	cfg := &configuration{
 		pokeapiClient: pokeClient,
 	}
+	err := commandPokedex(&buffer, cfg, "", pokedex)
+	actual := ""
+	if err != nil {
+		actual = err.Error()
+	} else {
+		actual = buffer.String()
+	}
 
-	exploreAreaString := ``
-	expectedMessage := "A pokemon name value is required. for example 'capture pikachu'"
-
-	err := commandCapture(&buffer, cfg, exploreAreaString)
-
-	actual := err.Error()
+	//actual = expectedMessage
 
 	if actual != expectedMessage {
 		t.Errorf("actual does not match expected\nactual: %v\nexpected: %v", actual, expectedMessage)
 	}
 
-}*/
+}
+
+func TestPokedexNoCaughtPokemonCommand(t *testing.T) {
+
+	var buffer bytes.Buffer
+	pokedex := &pokedex{}
+	pokedex.capturedPokemon = make(map[string]int)
+	pokedex.KnownPokemon = make(map[string]bool)
+
+	expectedMessage := "you have not caught any pokemon"
+
+	pokeClient := pokeapi.NewClient(5 * time.Second)
+	cfg := &configuration{
+		pokeapiClient: pokeClient,
+	}
+	err := commandPokedex(&buffer, cfg, "", pokedex)
+	actual := ""
+	if err != nil {
+		actual = err.Error()
+	} else {
+		actual = buffer.String()
+	}
+
+	//actual = expectedMessage
+
+	if actual != expectedMessage {
+		t.Errorf("actual does not match expected\nactual: %v\nexpected: %v", actual, expectedMessage)
+	}
+
+}

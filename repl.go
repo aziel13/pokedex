@@ -19,15 +19,16 @@ type configuration struct {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(io.Writer, *configuration, string, pokedex) error
+	callback    func(io.Writer, *configuration, string, *pokedex) error
 }
 
 type pokedex struct {
-	KnownPokemon    map[string]bool
-	capturedPokemon map[string]int
+	KnownPokemon          map[string]bool
+	capturedPokemon       map[string]int
+	capturedPokemonByTime []string
 }
 
-func startRepl(w io.Writer, cfg *configuration, pokedex pokedex) int {
+func startRepl(w io.Writer, cfg *configuration, pokedex *pokedex) int {
 
 	pokedex.capturedPokemon = make(map[string]int)
 	pokedex.KnownPokemon = make(map[string]bool)
@@ -136,6 +137,11 @@ func getCommands() map[string]cliCommand {
 			name:        "inspect",
 			description: "inspect a captured pokemon",
 			callback:    commandInspect,
+		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "a list of your pokemon ordered by time captured",
+			callback:    commandPokedex,
 		},
 	}
 }
